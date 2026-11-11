@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Team builder",
-    "description": "Adds a Team builder side panel that composes an agent-team brief, and a Team builder agent preset whose persona makes the Lead agent build the team automatically."
+    "description": "Adds a Team builder side panel that composes a team brief, and a Team builder preset whose persona drives a Lead agent to launch named subagents and track work on a todo_write task board (DSH v0.2.2-rc.2)."
   }
 }

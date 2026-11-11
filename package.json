@@ -1,8 +1,8 @@
 {
   "name": "@mokngai/dsh-team-profile-ui",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "description": "Team builder: an agent-team brief panel plus an auto-team agent preset for DSH",
+  "description": "Team builder: a team-brief panel plus a preset that launches named subagents and tracks work on a todo_write task board for DSH",
   "icon": "./icon.svg",
   "keywords": [
     "dsh",
