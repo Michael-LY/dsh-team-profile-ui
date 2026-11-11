@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Project memory (local only)
+.dsh-project-memory/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment / secrets
+.env
