@@ -19,7 +19,7 @@ window.__ModuleLoader__.load({
       previewLabel: 'Team brief',
       copy: 'Copy brief',
       copied: 'Copied',
-      hint: 'Create a New Session, pick the "Team builder" preset, and paste this brief. The Lead agent spawns the teammates and builds the shared task board.',
+      hint: 'Create a New Session, pick the "Team builder" preset, and paste this brief. The Lead agent launches the named subagents and tracks the work on a todo_write task board.',
       empty: 'Add at least one member.',
       copyFailed: 'Copy failed. Please select the text and copy it manually.',
       briefIntro: 'Automatically create and use an agent team to complete the task below.',
@@ -29,10 +29,11 @@ window.__ModuleLoader__.load({
       briefRoleSep: ': ',
       briefInstructionsHeader: 'Execution requirements:',
       briefStep1: '1. Plan the work first, splitting it into subtasks that can run in parallel or in order.',
-      briefStep2: '2. Use spawn_teammate to create the teammates listed above, each with a clear scope.',
-      briefStep3: '3. Use team_task_create to build a shared task board, stating dependencies and write scopes.',
+      briefStep2:
+        '2. Launch one named subagent per teammate above (one-shot, concurrent) with subagent; the prompt must be self-contained and state the scope and deliverables (use subagent_fork when it needs the current context).',
+      briefStep3: '3. Track the goal, boundaries, write scopes and dependencies on a todo_write task board.',
       briefStep4:
-        "4. Coordinate progress with send_message / wait_agent, then summarize all members' results and give a conclusion.",
+        '4. Keep working after launching, check progress with list_agents and follow up with send_message; when only waiting remains, end the turn and let completion notifications wake you, then summarize all results into a conclusion.',
     };
 
     const zh = {
@@ -49,7 +50,7 @@ window.__ModuleLoader__.load({
       previewLabel: '团队简报',
       copy: '复制简报',
       copied: '已复制',
-      hint: '新建一个会话，选择「团队构建器」模式，把这段简报粘贴进去。Lead 智能体会自动创建队友并建立共享任务板。',
+      hint: '新建一个会话，选择「团队构建器」模式，把这段简报粘贴进去。Lead 智能体会并发发起具名子代理，并用 todo_write 任务板跟踪进度。',
       empty: '至少添加一名成员。',
       copyFailed: '复制失败，请手动选择复制',
       briefIntro: '请自动创建并使用一个智能体团队来完成下面的任务。',
@@ -59,9 +60,9 @@ window.__ModuleLoader__.load({
       briefRoleSep: '：',
       briefInstructionsHeader: '执行要求：',
       briefStep1: '1. 先规划任务，拆成可并行或有序的子任务。',
-      briefStep2: '2. 用 spawn_teammate 按上面的名单创建队友，每个队友给清晰范围。',
-      briefStep3: '3. 用 team_task_create 建立共享任务板，标明依赖与写入范围。',
-      briefStep4: '4. 通过 send_message / wait_agent 协调进度，最后汇总所有成员的结果并给出结论。',
+      briefStep2: '2. 用 subagent 按上面的名单一次性并发发起具名子代理，prompt 自包含并写清范围与交付物（需继承当前上下文时用 subagent_fork）。',
+      briefStep3: '3. 用 todo_write 建立共享任务板，写明目标、边界、写入范围与依赖。',
+      briefStep4: '4. 发起后继续推进本地工作，用 list_agents 查看进度、用 send_message 追问；只剩等待时结束本轮，靠完成通知唤醒，最后汇总所有结果并给出结论。',
     };
 
     const S = {

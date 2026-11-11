@@ -207,3 +207,113 @@
 4. **L6**：`index.js` 注释包名与 README 对齐（Low）。
 5. **N1**：简报未命名成员兜底名本地化（Low）。
 6. **L3**：空目标提示策略（Low，产品确认）。
+
+---
+
+# 复核结论（rc.0.2.2 迁移轮）
+
+- 复核时间：2026-11-11
+- 复核对象：编码子代理的 rc.2 迁移改动，共 7 个文件——`cordis.patch.yml`、`client.js`、`index.js`、`README.md`、`locale/en.json`、`locale/zh.json`、`package.json`
+- 参照依据：`docs/rc-0.2.2-migration.md`（规划文档）+ DSH v0.2.2-rc.2 权威事实（release notes / 已安装 `@deepseek-ai` 包工具定义）
+- 复核方式：逐行通读改动 + 全量 `git diff` 对照 + 运行 `node --check`、JSON 解析、旧工具名 grep、回归红线计数、i18n 键集比对；**仅追加本结论章节，未改动任何源码/配置**。
+
+## 一、逐项核对表
+
+### 1. 迁移正确性
+
+| 检查项 | 结论 | 证据 / 说明 |
+| --- | --- | --- |
+| persona 全量改用 rc.2 工具 | ✅ 通过 | 六工具齐备：`todo_write`（第 2 步）、`subagent`（第 3 步）、`subagent_fork`+`maxDepth`（第 4 步）、`send_message`+`list_agents`+`interrupt_agent`（第 5 步）、结束本轮唤醒（第 6 步）；见 `cordis.patch.yml:33-40` |
+| briefStep 改用 rc.2 工具 | ✅ 通过 | en `client.js:32-36`、zh `client.js:63-65`，均用 `subagent`/`subagent_fork`/`todo_write`/`list_agents`/`send_message`，无旧工具名 |
+| 彻底不含已删除工具 | ✅ 通过 | 对 `spawn_teammate`/`team_task_create`/`team_task_update`/`wait_agent` 全仓 grep：源码/配置/README/locale/package.json **零命中**，仅 `docs/` 规划文档作为"已删除"说明出现（允许范围） |
+
+### 2. 语义正确性（persona 七步 + 拆分原则）
+
+| 语义点 | 结论 | 证据 |
+| --- | --- | --- |
+| 具名子代理（lower-kebab-case） | ✅ | `cordis.patch.yml:34`「写清 lower-kebab-case 名称」 |
+| prompt 自包含 | ✅ | `:34`「prompt 必须自包含（子代理看不到当前对话）」 |
+| 独立委派一次性并发发起 | ✅ | `:34`「一次性并发发起多个具名子代理」 |
+| 结束本轮、靠完成通知唤醒 | ✅ | `:37`「结束本轮，靠各子代理的完成通知唤醒」 |
+| 禁止轮询 / sleep | ✅ | `:37`「禁止用 sleep 或轮询空转」 |
+| 多层与 depth（maxDepth） | ✅ | `:35`「由子代理继续用 subagent 下钻（受 maxDepth 限制，缺省读 Host 设置，初始为 1）」 |
+| interrupt 默认关闭 | ✅ | `:36`「interrupt_agent 默认关闭，确有必要时才使用」 |
+| 团队 2-6 人 | ✅ | `:40`「团队规模控制在 2-6 人，够用即可」 |
+| 写作用域不重叠 | ✅ | `:40`「写作用域不重叠」 |
+| 依赖关系落任务板 | ✅ | `:40`「依赖关系写进任务板」 |
+
+### 3. i18n 一致性
+
+| 检查项 | 结论 | 证据 |
+| --- | --- | --- |
+| `client.js` en/zh 键集一致、无漏翻 | ✅ 通过 | 脚本比对：en 26 键 / zh 26 键，双向差集均为空；`briefStep1..4` 与 `hint` 中英均已同步 |
+| `locale/en.json` 与 `locale/zh.json` 一致 | ✅ 通过 | 均含 `meta.title`/`meta.description`，description 同为 rc.2 口径；title 与 client.js 内联 title 一致（Team builder / 团队构建器） |
+| 陈述性漏翻 | ✅ 无新增 | 唯一硬编码英文为简报兜底名 `'member-' + (i+1)`（前轮 N1 已记录，非本轮引入，低优先级） |
+
+### 4. 回归红线（既有修复未被破坏）
+
+| 编号 | 结论 | 证据（`client.js`） |
+| --- | --- | --- |
+| H1 复制失败不假成功 | ✅ 保留 | `fallbackCopy` 返回布尔（:182-196），`copy()` 用 succeed/fail 分支（:267-289） |
+| H3 稳定 key | ✅ 保留 | `makeMember` 稳定 id（:164-168）+ `key: m.id`（:318）；按 id 增删改（:236-238） |
+| H5 表单 a11y | ✅ 保留 | `label htmlFor="tb-goal"`+`textarea id="tb-goal"`（:299-301）、成员输入 `aria-label`（:324/332）、移除按钮 `aria-label`（:342） |
+| M1 定时器清理 | ✅ 保留 | `timerRef` 声明与 `useEffect` 卸载清理（:223-233）、成功回调前 `clearTimeout`（:270-274） |
+| M2 禁用态视觉 | ✅ 保留 | `ghostDisabled`（:137-145）+ `removeStyle` 切换（:292） |
+| M3 错误 aria-live | ✅ 保留 | 错误节点 `role: 'alert'` + `aria-live: 'assertive'`（:348） |
+
+> 红线计数实测（`client.js`）：`htmlFor`=1、`aria-label`=3、`aria-live`=1、`ghostDisabled`=2、`maxLength`=3、`key: m.id`=1、`fallbackCopy`=3、`return ok`=1、`timerRef` 命中（声明+清理多处）；`role:'alert'` 存在（:348）。与既有修复一致，无回退。
+
+### 5. 打包 / 版本
+
+| 检查项 | 结论 | 证据 |
+| --- | --- | --- |
+| 版本已 bump | ✅ | `package.json:3` `version: 0.2.0` |
+| exports 完整（H4/L8 未回退） | ✅ | `:24-31` 含 `"./cordis.patch.yml"` 与 `"./package.json"` |
+| files 完整 | ✅ | `:32-39` 含 index.js/client.js/cordis.patch.yml/locale/icon/README |
+
+### 6. 越界检查
+
+| 检查项 | 结论 | 证据 |
+| --- | --- | --- |
+| 仅改允许文件 | ✅ | `git diff --stat`：README、client.js、cordis.patch.yml、index.js、locale/en.json、locale/zh.json、package.json（7 个，全在编码范围） |
+| 未触碰审核/规划范围 | ✅ | `git status` 未列 `CODE_REVIEW.md`（本轮由审核追加）；`docs/` 为规划新增 untracked，编码未越界修改 |
+
+### 7. 语法 / 解析
+
+| 检查项 | 结论 | 证据 |
+| --- | --- | --- |
+| `node --check client.js` | ✅ exit 0 | 见下命令摘要 |
+| `node --check index.js` | ✅ exit 0 | 同上 |
+| `JSON.parse` package.json / locale | ✅ ok | 三文件均解析通过 |
+
+## 二、实际运行校验命令输出摘要
+
+```
+node --check client.js  -> exit 0
+node --check index.js   -> exit 0
+
+node -e "for f in [package.json, locale/en.json, locale/zh.json] JSON.parse(...)"
+  package.json ok
+  locale/en.json ok
+  locale/zh.json ok
+
+旧工具名 grep（spawn_teammate | team_task_create | team_task_update | wait_agent）
+  源码/配置/README/locale/package.json：零命中（仅 docs/ 规划文档命中，属允许范围）
+
+i18n 键集比对：en 26 / zh 26，only-in-en=[]，only-in-zh=[]
+
+git diff --stat：7 files changed, 49 insertions(+), 35 deletions(-)，全部在编码允许范围内
+```
+
+## 三、观测项（均非阻断，建议记录）
+
+- **O1 [低][待确认] `maxDepth: 2` 依赖 provider 支持 `depthLimit`**：`cordis.patch.yml:126` 已按方案建议值落地。若本环境 `spawn` provider 不支持 `depthLimit`，该字段应省略并回退 Host 设置（缺省初始为 1）。发布前建议实机确认一次；当前无证据表明不支持。
+- **O2 [低] 预设 `name`/`description` 仍英文硬编码**（`cordis.patch.yml:21-22`，M4 遗留）：README 已补「预设展示语言策略」说明，属既定接受项，不阻断。
+- **O3 [低] 插件 id 沿用 `@local/dsh-team-profile-ui`**（`client.js:2`、`cordis.patch.yml:15`）与 `package.json` 的 `@mokngai/dsh-team-profile-ui` 不一致——属既有状态、本轮未改动、不在迁移范围，建议后续统一，不影响本轮放行。
+- **N1 [低] 简报兜底名 `member-N` 硬编码英文**（`client.js:254`）——前轮已记录，非本轮引入。
+
+## 四、放行判断
+
+**结论：【放行】。**
+
+理由：迁移正确性、语义正确性、i18n 一致性、既有修复回归（H1/H3/H5/M1/M2/M3）、打包/版本、越界与语法七类检查**全部通过**；旧工具名在源码/配置/文档零残留；`client.js` 仅改文案字符串、逻辑零改动，红线计数与上一轮一致。不存在必须修复项（Blocking/Must-fix = 0）。仅余 O1（maxDepth provider 兼容性，发布前实机确认）为唯一建议动作，其余为低优先级既有项，均不阻断本轮提交。

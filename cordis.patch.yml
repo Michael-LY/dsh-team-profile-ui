@@ -1,11 +1,14 @@
 # Team builder bundle.
 #
-# Base: @deepseek-ai/dsh-experimental-agent-team-profile supplies the agent-team
-# service, the tool-agent-team model-facing tools, and the roster UI. This bundle
-# layers two things on top of it:
+# Base: the DSH base layer supplies the `dsh-subagent` service plus the spawn/fork
+# providers. This bundle layers two things on top of it:
 #   1. `team-profile-ui`  - the browser panel that composes a team brief.
 #   2. `preset-team-builder` - an agent preset whose persona makes the Lead agent
-#      decompose a job, spawn named teammates, and run it on the shared task board.
+#      decompose a job, launch named subagents concurrently, and track the work on
+#      a todo_write task board. The `delegation` group below wires the rc.2
+#      model-facing tools (tool-subagent / tool-subagent-control / tool-subagent-fork).
+# The optional `@deepseek-ai/dsh-experimental-agent-team-profile` layer can add a
+# shared members/task panel per session, but this bundle does not depend on it.
 
 - insert:
     - id: team-profile-ui
@@ -27,13 +30,14 @@
 
                 收到任务后按以下节奏工作：
                 1. 先判断任务能否拆成相互独立的子任务；只要不是琐碎的单项操作，就组建团队而不是独自完成。
-                2. 用 todo_write 或团队任务板梳理目标、边界和验收标准。
-                3. 用 spawn_teammate 创建具名队友（lower-kebab-case），每个队友只负责一块清晰范围，并给出自包含的初始任务。
-                4. 用 team_task_create 建立共享任务板，标明依赖与写入范围；用 team_task_update 认领、完成、重排。
-                5. 用 send_message 分派与追问，用 wait_agent 等待进展，不要空转轮询。
-                6. 最后汇总所有成员的结果，对冲突或遗漏做出裁决，给出完整结论。
+                2. 用 todo_write 建立共享任务板，写清目标、边界、验收标准，以及每项任务的写入范围与依赖关系。
+                3. 用 subagent（provider spawn）一次性并发发起多个具名子代理：prompt 必须自包含（子代理看不到当前对话），写清 lower-kebab-case 名称、职责范围、交付物与验收标准；它返回 started subagent <childId>，不会等待结果。
+                4. 需要沿用当前上下文的分支，用 subagent_fork 派生；需要多层协作时，由子代理继续用 subagent 下钻（受 maxDepth 限制，缺省读 Host 设置，初始为 1）。
+                5. 发起后继续推进本地可做的工作；用 send_message 追问，用 list_agents(scope: children|descendants) 查看在跑的成员。interrupt_agent 默认关闭，确有必要时才使用。
+                6. 当只剩等待结果时，结束本轮，靠各子代理的完成通知唤醒；禁止用 sleep 或轮询空转。
+                7. 收集全部结果后，对冲突或遗漏做出裁决，汇总成完整结论。
 
-                拆分原则：写作用域不重叠；能并行的并行；依赖关系写进 blocked_by。团队规模控制在 2-6 人，够用即可。
+                拆分原则：写作用域不重叠；能并行的并行；依赖关系写进任务板。团队规模控制在 2-6 人，够用即可。
           - id: agent-instructions
             name: '@deepseek-ai/dsh-agent-instructions'
             config:
@@ -119,6 +123,7 @@
                   toolName: subagent
                   modelSelection: true
                   modelDiscovery: true
+                  maxDepth: 2
               - id: tool-subagent-fork
                 name: '@deepseek-ai/dsh-tool-subagent'
                 config:
