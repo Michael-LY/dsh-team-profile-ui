@@ -13,3 +13,7 @@ Thumbs.db
 
 # Environment / secrets
 .env
+
+# npm cache (sandbox-local, used for publishing from workspace)
+.npm-cache/
+

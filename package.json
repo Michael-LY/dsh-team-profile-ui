@@ -1,10 +1,26 @@
 {
-  "name": "@local/dsh-team-profile-ui",
+  "name": "@mokngai/dsh-team-profile-ui",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
-  "description": "Team builder: an agent-team brief panel plus an auto-team agent preset",
+  "description": "Team builder: an agent-team brief panel plus an auto-team agent preset for DSH",
   "icon": "./icon.svg",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "agent-team",
+    "team-builder"
+  ],
+  "author": "mokngai",
+  "license": "MIT",
+  "homepage": "https://github.com/Michael-LY/dsh-team-profile-ui#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Michael-LY/dsh-team-profile-ui.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Michael-LY/dsh-team-profile-ui/issues"
+  },
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
@@ -21,6 +37,9 @@
     "icon.svg",
     "README.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
